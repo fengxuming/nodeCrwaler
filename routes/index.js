@@ -6,6 +6,7 @@ var request = require("request");
 var superagent = require("superagent");
 var cheerio = require("../node_modules/cheerio/index");
 var Bangumi = require("../models/bangumi");
+var Bangumimoe = require("../models/bangumimoe");
 var fs = require("fs");
 var gm = require("gm");
 
@@ -385,6 +386,59 @@ router.get("/huayuan",function (req,res,next) {
     // Queue just one URL, with default callback
     c.queue('https://share.dmhy.org/cms/page/name/programme.html');
 })
+router.get("/bangumimoe",function (req,res,next) {
+    var url = "https://bangumi.moe/api/bangumi/recent";
+    request({
+        uri:url,
+        method:"GET"
+    },function (error, response, body) {
+        if(error)
+        {
+            console.log(error);
+        }
+        var bangumimoesRecent = JSON.parse(body);
+        var bangumiTagIds = {};
+        bangumiTagIds._ids =[];
+        for(var i=0;i<bangumimoesRecent.length;i++){
+            bangumiTagIds._ids.push(bangumimoesRecent[i].tag_id)
+        }
+        // res.json(bangumiTagIds);
+        var url2 = "https://bangumi.moe/api/tag/fetch";
+        request({
+            uri:url2,
+            method:"POST",
+            json:true,
+            body:bangumiTagIds
+        },function (error,response,body) {
+            var bangumimoesArray = body;
+            var bangumimoesList = [];
+            for(var i=0;i<bangumimoesRecent.length;i++)
+            {
+                for(var n=0;n<bangumimoesArray.length;n++)
+                {
+                    if(bangumimoesRecent[i].tag_id === bangumimoesArray[n]._id)
+                    {
+                        var bangumimoe = new Bangumimoe();
+                        bangumimoe.name = bangumimoesRecent[i].name;
+                        bangumimoe.credit = bangumimoesRecent[i].credit;
+                        bangumimoe.startDate = bangumimoesRecent[i].startDate;
+                        bangumimoe.endDate = bangumimoesRecent[i].endDate;
+                        bangumimoe.showOn = bangumimoesRecent[i].showOn;
+                        bangumimoe.cover = bangumimoesRecent[i].cover;
+                        bangumimoe.locale = bangumimoesArray[n].locale;
+                        bangumimoe.save(function (err) {
+                            if(err){
+                                console.log(err);
+                            }
+                        })
+                        bangumimoesList.push(bangumimoe)
+                    }
+                }
+            }
+            res.json(bangumimoesList);
+        })
+    });
+});
 router.get('/test', function(req, res, next) {
     // request("http://share.dmhy.org/images/weekly/knights-magic.gif").pipe(fs.createWriteStream("public/" + "knights-magic.gif")).on("close",function () {
     //     res.send("hello");
