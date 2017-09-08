@@ -17,8 +17,8 @@ router.get('/', function(req, res, next) {
     if(req.query.officialSite){
         pam.officialSite = req.query.officialSite;
     }
-    if(req.query.playerDay){
-        pam.playerDay = req.query.playerDay;
+    if(req.query.showOn){
+        pam.showOn = req.query.showOn;
     }
 
     var query = Bangumimoe.find(pam).limit(maxSize).skip(offset);
