@@ -387,7 +387,7 @@ router.get("/huayuan",function (req,res,next) {
     c.queue('https://share.dmhy.org/cms/page/name/programme.html');
 })
 router.get("/bangumimoe",function (req,res,next) {
-    var url = "https://bangumi.moe/api/bangumi/recent";
+    let url = "https://bangumi.moe/api/bangumi/recent";
     request({
         uri:url,
         method:"GET"
@@ -396,51 +396,85 @@ router.get("/bangumimoe",function (req,res,next) {
         {
             console.log(error);
         }
-        var bangumimoesRecent = JSON.parse(body);
-        var bangumiTagIds = {};
+        let bangumimoesRecent = JSON.parse(body);
+        let bangumiTagIds = {};
         bangumiTagIds._ids =[];
-        for(var i=0;i<bangumimoesRecent.length;i++){
+        for(let i=0;i<bangumimoesRecent.length;i++){
             bangumiTagIds._ids.push(bangumimoesRecent[i].tag_id)
         }
-        // res.json(bangumiTagIds);
-        var url2 = "https://bangumi.moe/api/tag/fetch";
+        let url2 = "https://bangumi.moe/api/tag/fetch";
         request({
             uri:url2,
             method:"POST",
             json:true,
             body:bangumiTagIds
         },function (error,response,body) {
-            var bangumimoesArray = body;
-            var bangumimoesList = [];
-            for(var i=0;i<bangumimoesRecent.length;i++)
+            let bangumimoesArray = body;
+            let bangumimoesList = [];
+            for(let i=0;i<bangumimoesRecent.length;i++)
             {
-                for(var n=0;n<bangumimoesArray.length;n++)
+                for(let n=0;n<bangumimoesArray.length;n++)
                 {
                     if(bangumimoesRecent[i].tag_id === bangumimoesArray[n]._id)
                     {
-                        var bangumimoe = new Bangumimoe();
+                        let bangumimoe = new Bangumimoe();
                         bangumimoe.name = bangumimoesRecent[i].name;
                         bangumimoe.credit = bangumimoesRecent[i].credit;
                         bangumimoe.startDate = bangumimoesRecent[i].startDate;
                         bangumimoe.endDate = bangumimoesRecent[i].endDate;
                         bangumimoe.showOn = bangumimoesRecent[i].showOn;
-                        // bangumimoe.cover = bangumimoesRecent[i].cover;
                         bangumimoe.locale = bangumimoesArray[n].locale;
-
-                        var imgUrl = "https://bangumi.moe/"+bangumimoesRecent[n].cover;
-                        var filename = bangumimoesRecent[i].cover.split("/")[4];
-                        request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCovers/"+filename));
+                        let imgUrl = "https://bangumi.moe/"+bangumimoesRecent[i].cover;
+                        let filename = bangumimoesRecent[i].cover.split("/")[4];
                         bangumimoe.cover = "images/bangumimoeCovers/"+filename;
-                        bangumimoe.save(function (err) {
-                            if(err){
-                                console.log(err);
-                            }
-                        })
-                        bangumimoesList.push(bangumimoe)
+
+                        request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCovers/"+filename)).on("close",()=> {
+                            console.log(bangumimoe);
+                        });
+
+                        (function (bangumimoeTemp) {
+                            Bangumimoe.findOne({name: bangumimoeTemp.name}, function (err, data) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                                if (data) {
+                                    data.name = bangumimoeTemp.name;
+                                    data.credit = bangumimoeTemp.credit;
+                                    data.startDate = bangumimoeTemp.startDate;
+                                    data.endDate = bangumimoeTemp.endDate;
+                                    data.showOn = bangumimoeTemp.showOn;
+                                    data.locale = bangumimoeTemp.locale;
+                                    data.cover = bangumimoeTemp.cover;
+                                    data.save(function (err,result) {
+                                        if(err){
+                                            return handleError(err);
+                                        }
+                                        bangumimoesList.push(result);
+                                        if(bangumimoesList.length>=bangumimoesArray.length)
+                                        {
+                                            res.json(bangumimoesList);
+                                        }
+                                    })
+                                }
+                                else {
+                                    bangumimoe.save(function (err, bangumimoe) {
+                                        if (err) {
+                                            console.log(err);
+                                        }
+                                        bangumimoesList.push(bangumimoe);
+                                        if(bangumimoesList.length>=bangumimoesArray.length)
+                                        {
+                                            res.json(bangumimoesList);
+                                        }
+                                    })
+                                }
+                            })
+                        })(bangumimoe)
+
+
                     }
                 }
             }
-            res.json(bangumimoesList);
         })
     });
 });
@@ -457,4 +491,21 @@ router.get('/test', function(req, res, next) {
 
 
 });
+router.get("/bangumimoeImg",function (req,res,next) {
+    request({
+        uri:"https://bangumi.moe/api/bangumi/recent",
+        method:"GET",
+    },(error,response,body)=>{
+        let bangumimoesList = JSON.parse(body);
+        for(let i=0;i<bangumimoesList.length;i++)
+        {
+            let imgUrl = "https://bangumi.moe/"+bangumimoesList[i].cover;
+            request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCoversTest/"+bangumimoesList[i].cover.split("/")[4])).on("close",()=> {
+                console.log(bangumimoesList[i]);
+            });
+        }
+    });
+
+
+})
 module.exports = router;

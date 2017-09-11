@@ -5,6 +5,8 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require("mongoose");
+var request = require("request");
+var fs = require("fs");
 
 
 var index = require('./routes/index');
@@ -67,6 +69,19 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+request({
+    uri:"https://bangumi.moe/api/bangumi/recent",
+    method:"GET",
+},(error,response,body)=>{
+    let bangumimoesList = JSON.parse(body);
+    for(let i=0;i<bangumimoesList.length;i++)
+    {
+        let imgUrl = "https://bangumi.moe/"+bangumimoesList[i].cover;
+        request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCoversTest/"+bangumimoesList[i].cover.split("/")[4])).on("close",()=> {
+            console.log(bangumimoesList[i]);
+        });
+    }
+});
 
 
 

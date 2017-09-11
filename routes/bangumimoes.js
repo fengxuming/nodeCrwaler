@@ -61,7 +61,7 @@ router.put('/:id', function(req, res, next) {
 });
 router.get('/:id', function (req, res, next) {
     Bangumimoe.findOne({ _id: req.params.id}, function(err, bangumimoe) {
-        res.json(bangumi);
+        res.json(bangumimoe);
     });
 });
 
