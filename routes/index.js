@@ -424,8 +424,13 @@ router.get("/bangumimoe",function (req,res,next) {
                         bangumimoe.startDate = bangumimoesRecent[i].startDate;
                         bangumimoe.endDate = bangumimoesRecent[i].endDate;
                         bangumimoe.showOn = bangumimoesRecent[i].showOn;
-                        bangumimoe.cover = bangumimoesRecent[i].cover;
+                        // bangumimoe.cover = bangumimoesRecent[i].cover;
                         bangumimoe.locale = bangumimoesArray[n].locale;
+
+                        var imgUrl = "https://bangumi.moe/"+bangumimoesRecent[n].cover;
+                        var filename = bangumimoesRecent[i].cover.split("/")[4];
+                        request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCovers/"+filename));
+                        bangumimoe.cover = "images/bangumimoeCovers/"+filename;
                         bangumimoe.save(function (err) {
                             if(err){
                                 console.log(err);
