@@ -14,6 +14,7 @@ var users = require('./routes/users');
 var bangumis = require("./routes/bangumis");
 var bangumimoes = require("./routes/bangumimoes");
 var musics = require("./routes/musics");
+var upload = require("./routes/uploads");
 var app = express();
 
 mongoose.connect('mongodb://localhost/anime');
@@ -50,6 +51,7 @@ app.use('/users', users);
 app.use("/bangumis",bangumis);
 app.use("/musics",musics);
 app.use("/bangumimoes",bangumimoes);
+app.use("/upload",upload);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -69,19 +71,19 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-request({
-    uri:"https://bangumi.moe/api/bangumi/recent",
-    method:"GET",
-},(error,response,body)=>{
-    let bangumimoesList = JSON.parse(body);
-    for(let i=0;i<bangumimoesList.length;i++)
-    {
-        let imgUrl = "https://bangumi.moe/"+bangumimoesList[i].cover;
-        request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCoversTest/"+bangumimoesList[i].cover.split("/")[4])).on("close",()=> {
-            console.log(bangumimoesList[i]);
-        });
-    }
-});
+// request({
+//     uri:"https://bangumi.moe/api/bangumi/recent",
+//     method:"GET",
+// },(error,response,body)=>{
+//     let bangumimoesList = JSON.parse(body);
+//     for(let i=0;i<bangumimoesList.length;i++)
+//     {
+//         let imgUrl = "https://bangumi.moe/"+bangumimoesList[i].cover;
+//         request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCoversTest/"+bangumimoesList[i].cover.split("/")[4])).on("close",()=> {
+//             console.log(bangumimoesList[i]);
+//         });
+//     }
+// });
 
 
 

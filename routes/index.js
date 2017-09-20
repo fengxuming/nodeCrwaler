@@ -426,7 +426,7 @@ router.get("/bangumimoe",function (req,res,next) {
                         bangumimoe.locale = bangumimoesArray[n].locale;
                         let imgUrl = "https://bangumi.moe/"+bangumimoesRecent[i].cover;
                         let filename = bangumimoesRecent[i].cover.split("/")[4];
-                        bangumimoe.cover = "images/bangumimoeCovers/"+filename;
+                        bangumimoe.cover = "public/images/bangumimoeCovers/"+filename;
 
                         request(imgUrl).pipe(fs.createWriteStream("public/images/bangumimoeCovers/"+filename)).on("close",()=> {
                             console.log(bangumimoe);
